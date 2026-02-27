@@ -1,0 +1,32 @@
+{
+  "name": "@straylightagency/animate",
+  "version": "1.0.0",
+  "description": "Helper function to animate elements",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./*": "./src/*"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": false,
+  "keywords": [],
+  "author": "Anthony Pauwels (anthony@straylightagency.be)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/straylightagency/js-animate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/straylightagency/js-animate/issues"
+  },
+  "homepage": "https://github.com/straylightagency/js-animate#readme",
+  "dependencies": {
+    "@straylightagency/cancelable-promise": "^1.0.2"
+  }
+}
