@@ -1,4 +1,4 @@
-import {functions} from "./easingFunctions";
+import {functions} from "./easing";
 import CancelablePromise from "@straylightagency/cancelable-promise";
 
 /**
