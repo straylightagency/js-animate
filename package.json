@@ -1,11 +1,12 @@
 {
   "name": "@straylightagency/animate",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Helper function to animate elements",
   "type": "module",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
+    "./easing": "./src/easing/index.js",
     "./*": "./src/*"
   },
   "files": [
@@ -27,6 +28,6 @@
   },
   "homepage": "https://github.com/straylightagency/js-animate#readme",
   "dependencies": {
-    "@straylightagency/cancelable-promise": "^1.0.2"
+    "@straylightagency/cancelable-promise": "github:straylightagency/js-cancelable-promise"
   }
 }
