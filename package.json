@@ -1,6 +1,6 @@
 {
   "name": "@straylightagency/animate",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Helper function to animate elements",
   "type": "module",
   "main": "src/index.js",
@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/straylightagency/js-animate#readme",
   "dependencies": {
-    "@straylightagency/cancelable-promise": "^1.0.3"
+    "@straylightagency/cancelable-promise": "^1.0.3",
+    "@straylightagency/utils": "^1.0.8"
   }
 }
