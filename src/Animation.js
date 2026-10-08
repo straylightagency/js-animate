@@ -10,12 +10,12 @@ export default class Animation extends Playable {
     /**
      * @type {number}
      */
-    from = 0;
+    fromMs = 0;
 
     /**
      * @type {number}
      */
-    to = 0;
+    toMs = 0;
 
     /**
      * @type {number}
@@ -55,8 +55,8 @@ export default class Animation extends Playable {
         if (typeof duration !== "number") throw new Error("Argument `duration` must be a Number.");
         if (typeof from !== typeof to) throw new Error("Arguments `from` and `to` must be of the same type.");
 
-        this.from = from;
-        this.to = to;
+        this.fromMs = from;
+        this.toMs = to;
         this.duration = duration;
         this.easing = getEasingFunction(easing);
         this.update = update;
@@ -74,17 +74,17 @@ export default class Animation extends Playable {
     evaluate(localTime) {
         const clampedTime = Math.max(0, Math.min(localTime, this.duration));
 
-        if (typeof this.from === "object") {
+        if (typeof this.fromMs === "object") {
             const values = Object.fromEntries(
-                Object.entries(this.from).map(([key, startVal]) => {
-                    const endVal = this.to[key] ?? 0;
+                Object.entries(this.fromMs).map(([key, startVal]) => {
+                    const endVal = this.toMs[key] ?? 0;
                     const val = this.easing(clampedTime, startVal, endVal - startVal, this.duration);
                     return [key, val];
                 })
             );
             return this.update(values, clampedTime);
         } else {
-            const val = this.easing(clampedTime, this.from, this.to - this.from, this.duration);
+            const val = this.easing(clampedTime, this.fromMs, this.toMs - this.fromMs, this.duration);
             return this.update(val, clampedTime);
         }
     }
