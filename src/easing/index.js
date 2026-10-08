@@ -1,10 +1,12 @@
-//https://spicyyoghurt.com/tools/easing-functions
+/**
+ * @see https://spicyyoghurt.com/tools/easing-functions
+ */
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeLinear(t, b, c, d) {
@@ -12,10 +14,10 @@ export function easeLinear(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInQuad(t, b, c, d) {
@@ -23,10 +25,10 @@ export function easeInQuad(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutQuad(t, b, c, d) {
@@ -34,10 +36,10 @@ export function easeOutQuad(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutQuad(t, b, c, d) {
@@ -46,10 +48,10 @@ export function easeInOutQuad(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInSine(t, b, c, d) {
@@ -57,10 +59,10 @@ export function easeInSine(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutSine(t, b, c, d) {
@@ -68,10 +70,10 @@ export function easeOutSine(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutSine(t, b, c, d) {
@@ -79,10 +81,10 @@ export function easeInOutSine(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInExpo(t, b, c, d) {
@@ -90,10 +92,10 @@ export function easeInExpo(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutExpo(t, b, c, d) {
@@ -101,10 +103,10 @@ export function easeOutExpo(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutExpo(t, b, c, d) {
@@ -115,10 +117,10 @@ export function easeInOutExpo(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInCirc(t, b, c, d) {
@@ -126,10 +128,10 @@ export function easeInCirc(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutCirc(t, b, c, d) {
@@ -137,10 +139,10 @@ export function easeOutCirc(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutCirc(t, b, c, d) {
@@ -149,10 +151,10 @@ export function easeInOutCirc(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInCubic(t, b, c, d) {
@@ -160,10 +162,10 @@ export function easeInCubic(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutCubic(t, b, c, d) {
@@ -171,10 +173,10 @@ export function easeOutCubic(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutCubic(t, b, c, d) {
@@ -183,10 +185,10 @@ export function easeInOutCubic(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInQuart(t, b, c, d) {
@@ -194,10 +196,10 @@ export function easeInQuart(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutQuart(t, b, c, d) {
@@ -205,10 +207,10 @@ export function easeOutQuart(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutQuart(t, b, c, d) {
@@ -217,10 +219,10 @@ export function easeInOutQuart(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInQuint(t, b, c, d) {
@@ -228,10 +230,10 @@ export function easeInQuint(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutQuint(t, b, c, d) {
@@ -239,10 +241,10 @@ export function easeOutQuint(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutQuint(t, b, c, d) {
@@ -251,10 +253,10 @@ export function easeInOutQuint(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInElastic(t, b, c, d) {
@@ -273,10 +275,10 @@ export function easeInElastic(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutElastic(t, b, c, d) {
@@ -295,10 +297,10 @@ export function easeOutElastic(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutElastic(t, b, c, d) {
@@ -318,10 +320,10 @@ export function easeInOutElastic(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInBack(t, b, c, d) {
@@ -330,10 +332,10 @@ export function easeInBack(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeOutBack(t, b, c, d) {
@@ -342,10 +344,10 @@ export function easeOutBack(t, b, c, d) {
 }
 
 /**
- * @param t {Number}
- * @param b {Number}
- * @param c {Number}
- * @param d {Number}
+ * @param t {number}
+ * @param b {number}
+ * @param c {number}
+ * @param d {number}
  * @returns {*}
  */
 export function easeInOutBack(t, b, c, d) {

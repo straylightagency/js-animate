@@ -1,70 +1,75 @@
-import {functions} from "./easing";
-import CancelablePromise from "@straylightagency/cancelable-promise";
 import {getElementSizing} from "@straylightagency/utils/dom";
+import Sequence from "./Sequence.js";
+import Animation from "./Animation.js";
+import {DomAnimation} from "./DomAnimation.js";
 
 /**
- * @param easing
- * @returns {*|(function(*, *, *, *): *)}
+ * @param config
+ * @returns {Animation}
  */
-function getEasingFunction(easing) {
-    if ( functions[ easing ] ) {
-        return functions[ easing ];
-    }
-
-    return functions[ 'easeLinear' ];
+export function animate(config) {
+    return new Animation(config);
 }
 
 /**
- * @param from
- * @param to
- * @param duration
- * @param easing
- * @param update
- * @returns {CancelablePromise}
+ * @param animations
+ * @returns {Sequence}
  */
-export function animate({from, to, duration, easing, update}) {
-    easing = typeof easing === "function" ? easing : getEasingFunction( easing ?? "easeLinear" );
+export function sequence(animations) {
+    return new Sequence(animations);
+}
 
-    let start = null;
-    let cancel = false;
+/**
+ * @param duration
+ * @returns {Animation}
+ */
+export function wait(duration) {
+    return new Animation({
+        from: 0,
+        to: 0,
+        duration,
+        update: () => {},
+        autoplay: false,
+    });
+}
 
-    function loop(timestamp, resolve, reject) {
-        if ( cancel ) {
-            reject();
-            return;
-        }
+/**
+ * @param {Array|NodeList} targets
+ * @param {Function} createAnimation
+ * @param {Object} options
+ * @param {number} options.stagger
+ * @param {string: 'start' | 'end' | 'center'} options.from
+ */
+export function stagger(targets, createAnimation, { stagger = 100, from = 'start' } = {}) {
+    let elements = [];
 
-        start = !start ? timestamp : start;
-        const progress = timestamp - start;
-
-        if ( typeof from !== typeof to ) {
-            throw "The first and second arguments of `animate()` must be of the same type.";
-        }
-
-        if ( typeof from === "object" ) {
-            const values = Object.fromEntries( Object.entries( from ).map( ([key, value]) => {
-                value = easing( progress, value, ( to[ key ] ?? 0 ) - value, duration );
-
-                return [ key, value ];
-            } ) );
-
-            update( values, progress );
-        } else {
-            update( easing( progress, from, to - from, duration ), progress );
-        }
-
-        if ( progress < duration ) {
-            window.requestAnimationFrame( timestamp => loop( timestamp, resolve, reject ) )
-        } else {
-            resolve();
-        }
+    if (targets instanceof NodeList || Array.isArray(targets)) {
+        elements = Array.from(targets);
+    } else if (targets instanceof HTMLElement) {
+        elements = [targets];
     }
 
-    return new CancelablePromise( (resolve, reject, onCancel) => {
-        window.requestAnimationFrame( timestamp => loop( timestamp, resolve, reject ) );
+    if (elements.length === 0) {
+        return new Sequence([]);
+    }
 
-        onCancel( () => cancel = true );
-    } );
+    if (from === 'end') {
+        elements = elements.reverse();
+    }
+
+    const containerSequence = new Sequence();
+
+    elements.forEach((element, index) => {
+        const anim = createAnimation(element, index);
+
+        if (index > 0 && stagger > 0) {
+            containerSequence.add(anim, index * stagger);
+        } else {
+            containerSequence.add(anim, 0);
+        }
+    });
+
+    return containerSequence;
 }
 
 /**
@@ -72,21 +77,18 @@ export function animate({from, to, duration, easing, update}) {
  * @param duration
  * @param easing
  * @param display
- * @returns {CancelablePromise}
+ * @returns {Animation}
  */
 export function fadeShow(element, duration, easing = 'easeLinear', display = 'block') {
     element.style.display = display;
     element.style.opacity = 0;
 
-    return animate( {
-        from: 0,
-        to: 100,
+    return new Animation({
+        element,
+        keyframes: [{ opacity: 0 }, { opacity: 1 }],
         duration,
         easing,
-        update: (opacity, progress) => {
-            element._animationProgress = progress;
-            element.style.opacity = opacity / 100;
-        }
+        autoplay: false,
     } );
 }
 
@@ -94,22 +96,20 @@ export function fadeShow(element, duration, easing = 'easeLinear', display = 'bl
  * @param element
  * @param duration
  * @param easing
- * @returns {Promise<void>}
+ * @returns {DomAnimation}
  */
 export function fadeHide(element, duration, easing = 'easeLinear') {
     element.style.opacity = 1;
 
-    return animate( {
-        from: 100,
-        to: 0,
+    return new DomAnimation({
+        element,
+        keyframes: [{ opacity: 1 }, { opacity: 0 }],
         duration,
         easing,
-        update: (opacity, progress) => {
-            element._animationProgress = progress;
-            element.style.opacity = opacity / 100;
-        },
-    } ).then( () => {
-        element.style.display = 'none';
+        autoplay: false,
+        onComplete: () => {
+            element.style.display = 'none';
+        }
     } );
 }
 
@@ -118,29 +118,27 @@ export function fadeHide(element, duration, easing = 'easeLinear') {
  * @param duration
  * @param newOpacity
  * @param easing
- * @returns {Promise<void>}
+ * @returns {DomAnimation}
  */
 export function fadeTo(element, duration, newOpacity, easing = 'easeLinear') {
     const styles = getComputedStyle( element );
     const currentOpacity = parseFloat( styles.opacity );
     const display = styles.display;
 
-    return animate( {
-        from: currentOpacity * 100,
-        to: newOpacity * 100,
+    return new DomAnimation({
+        element,
+        keyframes: [{ opacity: currentOpacity }, { opacity: newOpacity }],
         duration,
         easing,
-        update: (opacity, progress) => {
-            element._animationProgress = progress;
-            element.style.opacity = opacity / 100;
-        }
-    } ).then( () => {
-        element.style.opacity = newOpacity;
+        autoplay: false,
+        onComplete: () => {
+            element.style.opacity = newOpacity;
 
-        if ( newOpacity <= 0 ) {
-            element.style.display = 'none';
-        } else {
-            element.style.display = display;
+            if ( newOpacity <= 0 ) {
+                element.style.display = 'none';
+            } else {
+                element.style.display = display;
+            }
         }
     } );
 }
@@ -150,7 +148,7 @@ export function fadeTo(element, duration, newOpacity, easing = 'easeLinear') {
  * @param duration
  * @param easing
  * @param display
- * @returns {Promise<void>}
+ * @returns {DomAnimation}
  */
 export function fadeToggle(element, duration, easing = 'easeLinear', display = 'block') {
     let animation;
@@ -175,7 +173,7 @@ export function fadeToggle(element, duration, easing = 'easeLinear', display = '
  * @param duration
  * @param easing
  * @param display
- * @returns {Promise<void>}
+ * @returns {Animation}
  */
 export function slideShow(element, duration, easing = 'easeLinear', display = 'block') {
     const styles = getComputedStyle( element );
@@ -185,7 +183,7 @@ export function slideShow(element, duration, easing = 'easeLinear', display = 'b
     const paddingTop = parseInt( styles.paddingTop );
     const paddingBottom = parseInt( styles.paddingBottom );
 
-    return animate( {
+    return new Animation({
         from: {
             paddingTop: 0,
             paddingBottom: 0,
@@ -206,12 +204,15 @@ export function slideShow(element, duration, easing = 'easeLinear', display = 'b
             element.style.paddingTop = values.paddingTop + "px";
             element.style.paddingBottom = values.paddingBottom + "px";
             element.style.height = values.height + "px";
-        }
-    } ).then( () => {
-        element.style.paddingTop = null;
-        element.style.paddingBottom = null;
-        element.style.height = null;
-        element.style.overflow = null;
+
+            return () => {
+                element.style.paddingTop = null;
+                element.style.paddingBottom = null;
+                element.style.height = null;
+                element.style.overflow = null;
+            };
+        },
+        autoplay: false,
     } );
 }
 
@@ -219,7 +220,7 @@ export function slideShow(element, duration, easing = 'easeLinear', display = 'b
  * @param element
  * @param duration
  * @param easing
- * @returns {Promise<void>}
+ * @returns {Animation}
  */
 export function slideHide(element, duration, easing = 'easeLinear') {
     const styles = getComputedStyle( element );
@@ -229,7 +230,7 @@ export function slideHide(element, duration, easing = 'easeLinear') {
     const paddingTop = parseInt( styles.paddingTop );
     const paddingBottom = parseInt( styles.paddingBottom );
 
-    return animate( {
+    return new Animation({
         from: {
             paddingTop,
             paddingBottom,
@@ -249,13 +250,16 @@ export function slideHide(element, duration, easing = 'easeLinear') {
             element.style.paddingTop = values.paddingTop + "px";
             element.style.paddingBottom = values.paddingBottom + "px";
             element.style.height = values.height + "px";
-        }
-    } ).then( () => {
-        element.style.paddingTop = null;
-        element.style.paddingBottom = null;
-        element.style.height = null;
-        element.style.overflow = null;
-        element.style.display = 'none';
+
+            return () => {
+                element.style.paddingTop = null;
+                element.style.paddingBottom = null;
+                element.style.height = null;
+                element.style.overflow = null;
+                element.style.display = 'none';
+            };
+        },
+        autoplay: false,
     } );
 }
 
@@ -264,7 +268,7 @@ export function slideHide(element, duration, easing = 'easeLinear') {
  * @param duration
  * @param easing
  * @param display
- * @returns {Promise<void>}
+ * @returns {DomAnimation}
  */
 export function slideToggle(element, duration, easing = 'easeLinear', display = 'block') {
     let animation;
@@ -290,43 +294,48 @@ export function slideToggle(element, duration, easing = 'easeLinear', display = 
  * @param duration
  * @param easing
  * @param display
- * @returns {CancelablePromise}
+ * @returns {DomAnimation}
  */
 export function scaleShow(element, duration, easing = 'easeLinear', display = 'block') {
     element.style.display = display;
     element.style.transform = "scale(0)";
 
-    return animate( {
-        from: 0,
-        to: 100,
+    const from = 0, to = 1;
+
+    return new DomAnimation({
+        element,
+        keyframes: [
+            { scale: `${from}` },
+            { scale: `${to}` }
+        ],
         duration,
         easing,
-        update: (scale, progress) => {
-            element._animationProgress = progress;
-            element.style.transform = "scale(" + (scale / 100) + ")";
-        }
-    } );
+        autoplay: false
+    });
 }
 
 /**
  * @param element
  * @param duration
  * @param easing
- * @returns {CancelablePromise}
+ * @returns {DomAnimation}
  */
 export function scaleHide(element, duration, easing = 'easeLinear') {
-    element.style.transform = "scale(1)";
+    const from = 1, to = 0;
 
-    return animate( {
-        from: 100,
-        to: 0,
+    return new DomAnimation({
+        element,
+        keyframes: [
+            { scale: `${from}` },
+            { scale: `${to}` }
+        ],
         duration,
         easing,
-        update: (scale, progress) => {
-            element._animationProgress = progress;
-            element.style.transform = "scale(" + (scale / 100) + ")";
+        autoplay: false,
+        onComplete: () => {
+            element.style.display = 'none';
         }
-    } );
+    });
 }
 
 /**
@@ -334,7 +343,7 @@ export function scaleHide(element, duration, easing = 'easeLinear') {
  * @param duration
  * @param easing
  * @param display
- * @returns {Promise<void>}
+ * @returns {DomAnimation}
  */
 export function scaleToggle(element, duration, easing = 'easeLinear', display = 'block') {
     let animation;
