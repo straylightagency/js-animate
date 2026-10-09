@@ -28,6 +28,5 @@
   },
   "homepage": "https://github.com/straylightagency/js-animate#readme",
   "dependencies": {
-    "@straylightagency/utils": "^1.0.8"
   }
 }

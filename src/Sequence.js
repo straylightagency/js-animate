@@ -7,39 +7,111 @@ import Playable from "./Playable.js";
  */
 export default class Sequence extends Playable {
     /**
-     * @type {[]}
+     * @type {Array<{item: Playable, startTime: number, endTime: number}>}
      */
     items = [];
 
     /**
-     * @param {[]} animations
-     * @param {{}} config
+     * @param {Array<Playable|Object>} animations
+     * @param {Object} [config={}]
      */
     constructor(animations = [], config = {}) {
         super(config);
 
-        animations.forEach(anim => this.add(anim, this.duration));
+        this.items = [];
+        this.duration = 0;
+
+        animations.forEach(anim => this.add(anim));
     }
 
     /**
-     * @param {Playable} animation
+     * @param {Playable|Object} animation
      * @param {null|number} startTime
      * @returns {Sequence}
      */
     add(animation, startTime = null) {
+        let item;
+
         if (animation instanceof Playable) {
-            animation.pause();
-            animation.controlledBySequence = true;
+            item = animation;
+            item.pause();
+        } else {
+            item = new DomAnimation({ ...animation, autoplay: false });
         }
 
-        const item = animation instanceof Playable ? animation : new Animation({ ...animation, autoplay: false });
         item.controlledBySequence = true;
 
-        startTime = startTime !== null ? startTime : this.duration;
-        const endTime = startTime + item.duration;
+        item.setTimeScale(this.timeScale);
+        item.reverse(this.direction);
 
-        this.items.push({ item, startTime, endTime });
-        this.duration = endTime;
+        const start = startTime !== null ? startTime : this.duration;
+        const end = start + item.duration;
+
+        this.items.push({ item, startTime: start, endTime: end });
+
+        this.recalculateDuration();
+
+        return this;
+    }
+
+    /**
+     * @param {Playable|Object} animation
+     * @param {number} timeMs
+     * @returns {Sequence}
+     */
+    addAt(animation, timeMs) {
+        return this.add(animation, timeMs);
+    }
+
+    /**
+     * @return void
+     */
+    recalculateDuration() {
+        this.duration = this.items.reduce((max, entry) => Math.max(max, entry.endTime), 0);
+    }
+
+    /**
+     * @returns {*}
+     */
+    start() {
+        this.recalculateDuration();
+
+        const startTime = this.direction === 'reverse' ? this.duration : 0;
+        this.to(startTime);
+
+        return this.resume();
+    }
+
+    /**
+     * @param {'normal'|'reverse'} [direction]
+     * @returns {this}
+     */
+    reverse(direction) {
+        super.reverse(direction);
+
+        this.recalculateDuration();
+
+        for (const { item } of this.items) {
+            item.reverse(this.direction);
+        }
+
+        if (!this.running) {
+            this.timing = this.direction === 'reverse' ? this.duration : 0;
+        }
+
+        return this;
+    }
+
+    /**
+     * @param {number} scale
+     * @returns {this}
+     */
+    setTimeScale(scale) {
+        super.setTimeScale(scale);
+
+        for (const { item } of this.items) {
+            item.setTimeScale(this.timeScale);
+        }
 
         return this;
     }

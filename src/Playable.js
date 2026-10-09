@@ -15,6 +15,21 @@ export default class Playable {
     duration = 0;
 
     /**
+     * @type {string}
+     */
+    direction = 'normal';
+
+    /**
+     * @type {number}
+     */
+    #timeScale = 1;
+
+    /**
+     * @type {number}
+     */
+    timing;
+
+    /**
      * @type {boolean}
      */
     running = false;
@@ -98,17 +113,35 @@ export default class Playable {
      * @param {{}} config
      */
     constructor(config = {}) {
-        this.onStart = config.onStart ?? null;
-        this.onUpdate = config.onUpdate ?? null;
-        this.onComplete = config.onComplete ?? null;
-        this.onPause = config.onPause ?? null;
-        this.onAbort = config.onAbort ?? null;
+        const { duration = 0, delay = 0, direction = 'normal', timeScale = 1, onStart = null,
+            onUpdate = null, onComplete = null, onPause = null, onAbort = null, signal = null } = config;
 
-        this.signal = config.signal ?? null;
+        this.duration = duration;
+        this.delay = delay;
+        this.direction = direction;
+        this.#timeScale = timeScale;
+        this.timing = this.direction === 'reverse' ? this.duration : -this.delay;
+
+        this.onStart = onStart;
+        this.onUpdate = onUpdate;
+        this.onComplete = onComplete;
+        this.onPause = onPause;
+        this.onAbort = onAbort;
+
+        this.signal = signal;
 
         if (this.signal?.aborted) {
             this.abort();
         }
+    }
+
+    get timeScale() {
+        return this.#timeScale;
+    }
+
+    setTimeScale(scale) {
+        this.#timeScale = Math.max(0, scale);
+        return this;
     }
 
     /**
@@ -189,7 +222,23 @@ export default class Playable {
 
         this.pause();
         this.hasStarted = false;
-        this.to(0);
+
+        const initialTime = this.direction === 'reverse' ? this.duration : -this.delay;
+        this.to(initialTime);
+
+        return this;
+    }
+
+    /**
+     * @param {string} direction
+     * @returns {Playable}
+     */
+    reverse(direction) {
+        if (direction) {
+            this.direction = direction;
+        } else {
+            this.direction = this.direction === 'normal' ? 'reverse' : 'normal';
+        }
 
         return this;
     }
@@ -249,22 +298,28 @@ export default class Playable {
         const delta = now - this.lastTimestamp;
         this.lastTimestamp = now;
 
-        this.timing += delta;
+        const rate = this.direction === 'reverse' ? -1 : 1;
 
-        if (this.timing >= this.duration) {
+        this.timing += delta * rate * this.#timeScale;
+
+        const isFinished = this.direction === 'reverse'
+            ? this.timing <= 0
+            : this.timing >= this.duration;
+
+        if (isFinished) {
             if (this.looping) {
-                this.timing %= this.duration;
+                this.timing = this.direction === 'reverse' ? this.duration : 0;
                 this.evaluate(this.timing);
 
                 if (typeof this.onUpdate === "function") {
                     this.onUpdate(this.timing / this.duration, this.timing, this);
                 }
             } else {
-                this.timing = this.duration;
-                const completeFn = this.evaluate(this.duration);
+                this.timing = this.direction === 'reverse' ? 0 : this.duration;
+                const completeFn = this.evaluate(this.timing);
 
                 if (typeof this.onUpdate === "function") {
-                    this.onUpdate(1, this.duration, this);
+                    this.onUpdate(1, this.timing, this);
                 }
 
                 this.pause();
@@ -274,7 +329,7 @@ export default class Playable {
                 }
 
                 if (typeof completeFn === "function") {
-                    completeFn();
+                    completeFn(this);
                 }
 
                 if (this.#resolve) {

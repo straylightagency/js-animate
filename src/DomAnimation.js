@@ -12,7 +12,7 @@ export class DomAnimation extends Playable {
     element = null;
 
     /**
-     * @type {[]}
+     * @type {Array}
      */
     keyframes = [];
 
@@ -37,12 +37,15 @@ export class DomAnimation extends Playable {
     #promise = null;
 
     /**
-     * @param {{}} config
+     * @param {Object} config
      * @param {Element} config.element
-     * @param {[]} config.keyframes
+     * @param {Array} config.keyframes
      * @param {number} config.duration
-     * @param {string} config.easing
-     * @param {boolean} config.autoplay
+     * @param {number} [config.delay=0]
+     * @param {string} [config.easing='linear']
+     * @param {boolean} [config.autoplay=true]
+     * @param {number} [config.timeScale=1]
+     * @param {'normal'|'reverse'} [config.direction='normal']
      */
     constructor(config) {
         super(config);
@@ -62,20 +65,42 @@ export class DomAnimation extends Playable {
     }
 
     /**
-     * @return void
+     * @return {void}
      */
     initNativeAnimation() {
         this.waapiAnimation = this.element.animate(this.keyframes, {
             duration: this.duration,
+            delay: this.delay,
             easing: this.easing,
             fill: 'both',
         });
 
+        this.#syncPlaybackRate();
         this.waapiAnimation.pause();
     }
 
     /**
-     * @returns {Promise}
+     * @param {'normal'|'reverse'} [direction]
+     * @returns {this}
+     */
+    reverse(direction) {
+        super.reverse(direction);
+        this.#syncPlaybackRate();
+        return this;
+    }
+
+    /**
+     * @param {number} scale
+     * @returns {this}
+     */
+    setTimeScale(scale) {
+        super.setTimeScale(scale);
+        this.#syncPlaybackRate();
+        return this;
+    }
+
+    /**
+     * @returns {Promise|this}
      */
     resume() {
         if (this.signal?.aborted) {
@@ -106,6 +131,7 @@ export class DomAnimation extends Playable {
                 this.signal.addEventListener('abort', onAbort, { once: true });
             }
 
+            this.#syncPlaybackRate();
             this.waapiAnimation.play();
 
             this.#trackProgress();
@@ -113,10 +139,13 @@ export class DomAnimation extends Playable {
             this.waapiAnimation.finished
                 .then(() => {
                     this.running = false;
-                    this.timing = this.duration;
+
+                    const isReverse = this.direction === 'reverse';
+                    this.timing = isReverse ? 0 : this.duration;
+                    const endProgress = isReverse ? 0 : 1;
 
                     if (typeof this.onUpdate === 'function') {
-                        this.onUpdate(1, this.duration, this);
+                        this.onUpdate(endProgress, this.timing, this);
                     }
 
                     if (typeof this.onComplete === 'function') {
@@ -125,14 +154,15 @@ export class DomAnimation extends Playable {
 
                     if (this.#resolve) {
                         const resolveFn = this.#resolve;
-                        this.#resolve = null;
-                        this.#reject = null;
+                        this.#clearPromiseHandles();
                         resolveFn(this);
                     }
                 })
                 .catch(err => {
                     if (err.name !== 'AbortError' && this.#reject) {
-                        this.#reject(err);
+                        const rejectFn = this.#reject;
+                        this.#clearPromiseHandles();
+                        rejectFn(err);
                     }
                 });
         });
@@ -164,13 +194,14 @@ export class DomAnimation extends Playable {
      * @returns {DomAnimation}
      */
     to(timeMs) {
-        this.timing = Math.max(0, Math.min(timeMs, this.duration));
+        const effectiveTime = timeMs - this.delay;
+        this.timing = Math.max(0, Math.min(effectiveTime, this.duration));
 
         if (this.waapiAnimation) {
             this.waapiAnimation.currentTime = this.timing;
         }
 
-        if (typeof this.onUpdate === 'function') {
+        if (typeof this.onUpdate === 'function' && effectiveTime >= 0) {
             const progress = this.duration > 0 ? this.timing / this.duration : 1;
             this.onUpdate(progress, this.timing, this);
         }
@@ -198,6 +229,17 @@ export class DomAnimation extends Playable {
     }
 
     /**
+     * @private
+     */
+    #syncPlaybackRate() {
+        if (this.waapiAnimation) {
+            const dirRate = this.direction === 'reverse' ? -1 : 1;
+            this.waapiAnimation.playbackRate = dirRate * this.timeScale;
+        }
+    }
+
+    /**
+     * @private
      * @return {void}
      */
     #trackProgress() {
@@ -208,10 +250,19 @@ export class DomAnimation extends Playable {
                 ? this.waapiAnimation.currentTime
                 : this.timing;
 
-            const progress = this.duration > 0 ? this.timing / this.duration : 1;
+            const progress = this.duration > 0 ? this.timing / this.duration : 0;
             this.onUpdate(progress, this.timing, this);
         }
 
         requestAnimationFrame(() => this.#trackProgress());
+    }
+
+    /**
+     * @private
+     */
+    #clearPromiseHandles() {
+        this.#resolve = null;
+        this.#reject = null;
+        this.#promise = null;
     }
 }

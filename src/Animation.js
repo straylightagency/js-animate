@@ -18,11 +18,6 @@ export default class Animation extends Playable {
     toMs = 0;
 
     /**
-     * @type {number}
-     */
-    duration = 0;
-
-    /**
      * @param {number} t
      * @param {number} b
      * @param {number} c
@@ -51,13 +46,12 @@ export default class Animation extends Playable {
 
         const { from, to, duration, easing, update, autoplay = true } = config;
 
-        if (typeof update !== "function") throw new Error("Argument `update` is required and must be a function.");
         if (typeof duration !== "number") throw new Error("Argument `duration` must be a Number.");
+        if (typeof update !== "function") throw new Error("Argument `update` is required and must be a function.");
         if (typeof from !== typeof to) throw new Error("Arguments `from` and `to` must be of the same type.");
 
         this.fromMs = from;
         this.toMs = to;
-        this.duration = duration;
         this.easing = getEasingFunction(easing);
         this.update = update;
 
