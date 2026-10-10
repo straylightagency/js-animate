@@ -1,3 +1,4 @@
+const EPSILON = 0.001;
 /**
  * Playable class handling animations
  *
@@ -15,6 +16,11 @@ export default class Playable {
     duration = 0;
 
     /**
+     * @type {number}
+     */
+    delay = 0;
+
+    /**
      * @type {string}
      */
     direction = 'normal';
@@ -25,11 +31,6 @@ export default class Playable {
     #timeScale = 1;
 
     /**
-     * @type {number}
-     */
-    timing;
-
-    /**
      * @type {boolean}
      */
     running = false;
@@ -38,6 +39,11 @@ export default class Playable {
      * @type {boolean}
      */
     looping = false;
+
+    /**
+     * @type {boolean}
+     */
+    alternate = false;
 
     /**
      * @type {boolean}
@@ -113,12 +119,15 @@ export default class Playable {
      * @param {{}} config
      */
     constructor(config = {}) {
-        const { duration = 0, delay = 0, direction = 'normal', timeScale = 1, onStart = null,
-            onUpdate = null, onComplete = null, onPause = null, onAbort = null, signal = null } = config;
+        const { duration = 0, delay = 0, direction = 'normal', timeScale = 1,
+            looping = false, alternate = false, onStart = null, onUpdate = null, onComplete = null,
+            onPause = null, onAbort = null, signal = null } = config;
 
         this.duration = duration;
         this.delay = delay;
         this.direction = direction;
+        this.looping = looping;
+        this.alternate = alternate;
         this.#timeScale = timeScale;
         this.timing = this.direction === 'reverse' ? this.duration : -this.delay;
 
@@ -135,10 +144,17 @@ export default class Playable {
         }
     }
 
+    /**
+     * @return {number}
+     */
     get timeScale() {
         return this.#timeScale;
     }
 
+    /**
+     * @param {number} scale
+     * @return {Playable}
+     */
     setTimeScale(scale) {
         this.#timeScale = Math.max(0, scale);
         return this;
@@ -230,10 +246,10 @@ export default class Playable {
     }
 
     /**
-     * @param {string} direction
+     * @param {null|string} direction
      * @returns {Playable}
      */
-    reverse(direction) {
+    reverse(direction = null) {
         if (direction) {
             this.direction = direction;
         } else {
@@ -255,7 +271,7 @@ export default class Playable {
 
         if (this.#reject) {
             const rejectFn = this.#reject;
-            this.#clearPromiseHandles();
+            this.#cleanup();
             rejectFn(new DOMException('Aborted', 'AbortError'));
         }
 
@@ -279,16 +295,6 @@ export default class Playable {
     }
 
     /**
-     * @param {boolean} value
-     * @returns {Playable}
-     */
-    loop(value = true) {
-        this.looping = value;
-
-        return this;
-    }
-
-    /**
      * @return void
      */
     tick() {
@@ -303,12 +309,17 @@ export default class Playable {
         this.timing += delta * rate * this.#timeScale;
 
         const isFinished = this.direction === 'reverse'
-            ? this.timing <= 0
-            : this.timing >= this.duration;
+            ? this.timing <= EPSILON
+            : this.timing >= (this.duration - EPSILON);
 
         if (isFinished) {
             if (this.looping) {
-                this.timing = this.direction === 'reverse' ? this.duration : 0;
+                if (this.alternate) {
+                    this.reverse();
+                } else {
+                    this.timing = this.direction === 'reverse' ? this.duration : 0;
+                }
+
                 this.evaluate(this.timing);
 
                 if (typeof this.onUpdate === "function") {
@@ -334,8 +345,7 @@ export default class Playable {
 
                 if (this.#resolve) {
                     const resolveFn = this.#resolve;
-                    this.#resolve = null;
-                    this.#reject = null;
+                    this.#cleanup();
                     resolveFn(this);
                 }
                 return;
@@ -363,18 +373,12 @@ export default class Playable {
     /**
      * @return void
      */
-    #cleanupSignalListener() {
+    #cleanup() {
         if (this.signal && this.#abortHandler) {
             this.signal.removeEventListener('abort', this.#abortHandler);
             this.#abortHandler = null;
         }
-    }
 
-    /**
-     * @return void
-     */
-    #clearPromiseHandles() {
-        this.#cleanupSignalListener();
         this.#resolve = null;
         this.#reject = null;
         this.#promise = null;

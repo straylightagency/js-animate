@@ -5,7 +5,7 @@ import Playable from './Playable.js';
  *
  * @author anthony@straylightagency.be
  */
-export class DomAnimation extends Playable {
+export default class DomAnimation extends Playable {
     /**
      * @type {null|Element}
      */
@@ -37,7 +37,7 @@ export class DomAnimation extends Playable {
     #promise = null;
 
     /**
-     * @param {Object} config
+     * @param {{}} config
      * @param {Element} config.element
      * @param {Array} config.keyframes
      * @param {number} config.duration
@@ -68,6 +68,8 @@ export class DomAnimation extends Playable {
      * @return {void}
      */
     initNativeAnimation() {
+        if (!this.element) return;
+
         this.waapiAnimation = this.element.animate(this.keyframes, {
             duration: this.duration,
             delay: this.delay,
@@ -75,13 +77,15 @@ export class DomAnimation extends Playable {
             fill: 'both',
         });
 
-        this.#syncPlaybackRate();
+        this.waapiAnimation.currentTime = 0;
         this.waapiAnimation.pause();
+
+        this.#syncPlaybackRate();
     }
 
     /**
      * @param {'normal'|'reverse'} [direction]
-     * @returns {this}
+     * @returns {DomAnimation}
      */
     reverse(direction) {
         super.reverse(direction);
@@ -91,7 +95,7 @@ export class DomAnimation extends Playable {
 
     /**
      * @param {number} scale
-     * @returns {this}
+     * @returns {DomAnimation}
      */
     setTimeScale(scale) {
         super.setTimeScale(scale);
@@ -100,7 +104,7 @@ export class DomAnimation extends Playable {
     }
 
     /**
-     * @returns {Promise|this}
+     * @returns {Promise|DomAnimation}
      */
     resume() {
         if (this.signal?.aborted) {
@@ -193,17 +197,30 @@ export class DomAnimation extends Playable {
      * @param {number} timeMs
      * @returns {DomAnimation}
      */
-    to(timeMs) {
-        const effectiveTime = timeMs - this.delay;
+    to(timeMs) {const effectiveTime = timeMs - this.delay;
+        const previousTiming = this.timing;
+
         this.timing = Math.max(0, Math.min(effectiveTime, this.duration));
 
         if (this.waapiAnimation) {
-            this.waapiAnimation.currentTime = this.timing;
+            this.waapiAnimation.currentTime = Math.max(0, this.timing);
         }
 
         if (typeof this.onUpdate === 'function' && effectiveTime >= 0) {
             const progress = this.duration > 0 ? this.timing / this.duration : 1;
             this.onUpdate(progress, this.timing, this);
+        }
+
+        if (this.controlledBySequence) {
+            const isReverse = this.direction === 'reverse';
+            const reachedEnd = !isReverse && previousTiming < this.duration && this.timing >= this.duration;
+            const reachedStart = isReverse && previousTiming > 0 && this.timing <= 0;
+
+            if (reachedEnd || reachedStart) {
+                if (typeof this.onComplete === 'function') {
+                    this.onComplete(this);
+                }
+            }
         }
 
         return this;

@@ -1,4 +1,5 @@
 import Playable from "./Playable.js";
+import DomAnimation from "./DomAnimation.js";
 
 /**
  * Animation Sequence class
@@ -12,8 +13,8 @@ export default class Sequence extends Playable {
     items = [];
 
     /**
-     * @param {Array<Playable|Object>} animations
-     * @param {Object} [config={}]
+     * @param {Array<Playable|{}>} animations
+     * @param {{}} [config={}]
      */
     constructor(animations = [], config = {}) {
         super(config);
@@ -25,11 +26,30 @@ export default class Sequence extends Playable {
     }
 
     /**
-     * @param {Playable|Object} animation
-     * @param {null|number} startTime
+     * @param {Playable|{}} animation
+     * @param {null|string|number} position
      * @returns {Sequence}
      */
-    add(animation, startTime = null) {
+    add(animation, position = null) {
+        let startTime = this.duration;
+
+        if (typeof position === 'number') {
+            startTime = position;
+        } else if (typeof position === 'string') {
+            const prevItem = this.items[this.items.length - 1];
+            const lastStartTime = prevItem ? prevItem.startTime : 0;
+            const lastEndTime = prevItem ? prevItem.endTime : 0;
+
+            if (position === '<') {
+                startTime = lastStartTime;
+            } else if (position === '>') {
+                startTime = lastEndTime;
+            } else if (position.startsWith('+=') || position.startsWith('-=')) {
+                const offset = parseFloat(position.replace('=', ''));
+                startTime = this.duration + offset;
+            }
+        }
+
         let item;
 
         if (animation instanceof Playable) {
@@ -55,7 +75,7 @@ export default class Sequence extends Playable {
     }
 
     /**
-     * @param {Playable|Object} animation
+     * @param {Playable|{}} animation
      * @param {number} timeMs
      * @returns {Sequence}
      */
@@ -84,7 +104,7 @@ export default class Sequence extends Playable {
 
     /**
      * @param {'normal'|'reverse'} [direction]
-     * @returns {this}
+     * @returns {Sequence}
      */
     reverse(direction) {
         super.reverse(direction);
@@ -104,7 +124,7 @@ export default class Sequence extends Playable {
 
     /**
      * @param {number} scale
-     * @returns {this}
+     * @returns {Sequence}
      */
     setTimeScale(scale) {
         super.setTimeScale(scale);
@@ -120,7 +140,11 @@ export default class Sequence extends Playable {
      * @param {number} globalTime
      */
     evaluate(globalTime) {
-        for (const { item, startTime, endTime } of this.items) {
+        const itemsToEvaluate = this.direction === 'reverse'
+            ? [...this.items].reverse()
+            : this.items;
+
+        for (const { item, startTime, endTime } of itemsToEvaluate) {
             if (globalTime >= startTime && globalTime <= endTime) {
                 item.evaluate(globalTime - startTime);
             } else if (globalTime < startTime) {
