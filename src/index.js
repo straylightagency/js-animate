@@ -28,12 +28,28 @@ function getElementSizing(element) {
     return { height, width };
 }
 
+export {
+    Animation,
+    DomAnimation,
+    Sequence,
+    Parallel,
+    Playable
+};
+
 /**
  * @param {{}} config
  * @returns {Animation}
  */
 export function animate(config) {
     return new Animation(config);
+}
+
+/**
+ * @param {{}} config
+ * @returns {DomAnimation}
+ */
+export function domAnimate(config) {
+    return new DomAnimation(config);
 }
 
 /**
@@ -97,24 +113,26 @@ export function stagger(targets, createAnimation, staggerDelay, from) {
         elements = [targets];
     }
 
-    if (elements.length === 0) {
-        return new Sequence([]);
-    }
-
-    if (from === 'end') {
-        elements = elements.reverse();
-    }
-
     const containerSequence = new Sequence();
+    const length = elements.length;
+
+    if (length === 0) return containerSequence;
+
+    const centerIndex = (length - 1) / 2;
 
     elements.forEach((element, index) => {
-        const anim = createAnimation(element, index);
+        let delay = 0;
 
-        if (index > 0 && staggerDelay > 0) {
-            containerSequence.add(anim, index * staggerDelay);
+        if (from === 'end') {
+            delay = (length - 1 - index) * staggerDelay;
+        } else if (from === 'center') {
+            delay = Math.abs(index - centerIndex) * staggerDelay;
         } else {
-            containerSequence.add(anim, 0);
+            delay = index * staggerDelay;
         }
+
+        const playable = createAnimation(element, index);
+        containerSequence.add(playable, delay);
     });
 
     return containerSequence;
@@ -189,8 +207,7 @@ export function fadeHide(config = {}) {
 export function fadeTo(config = {}) {
     const {element, opacity = 1, display = 'block', onStart = () => {}, onComplete = () => {}} = config;
     const styles = getComputedStyle(element);
-    const rawOpacity = parseFloat(styles.opacity);
-    const currentOpacity = isNaN(rawOpacity) ? 1 : rawOpacity;
+    const currentOpacity = parseFloat(styles.opacity) || 1;
 
     return new DomAnimation(config, {
         keyframes: [
