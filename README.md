@@ -4,6 +4,8 @@ A lightweight JavaScript animation library for the modern web.
 
 `@straylightagency/animate` provides a simple API for creating animations, controlling their playback, and orchestrating complex motion sequences. From animating numeric values to building DOM transitions and scroll-driven interactions, it gives you the building blocks to create dynamic web experiences with vanilla JavaScript.
 
+## Features
+
 - **Zero runtime dependencies**
 - **ES modules**
 - **Composable animations**
