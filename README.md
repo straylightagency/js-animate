@@ -820,6 +820,46 @@ animation.start().catch((error) => {
 });
 ```
 
+### Using CancelablePromise
+
+You can combine `@straylightagency/animate` with [`@straylightagency/cancelable-promise`](https://github.com/straylightagency/js-cancelable-promise) to manage animations through a cancelable Promise interface.
+
+```bash
+npm install @straylightagency/animate @straylightagency/cancelable-promise
+```
+
+```js
+import { animate } from '@straylightagency/animate';
+import { CancelablePromise } from '@straylightagency/cancelable-promise';
+
+function animateValue(options) {
+    return new CancelablePromise((resolve, reject, signal) => {
+        animate({
+            ...options,
+            signal,
+            onComplete: resolve,
+        });
+    });
+}
+
+const animation = animateValue({
+    from: 0,
+    to: 100,
+    duration: 2000,
+
+    update(value) {
+        console.log(value);
+    },
+});
+
+// Cancel the animation
+animation.cancel();
+```
+
+Calling `cancel()` aborts the animation through its `AbortSignal`.
+
+**Note:** `@straylightagency/animate` supports native `AbortSignal` cancellation and does not require `@straylightagency/cancelable-promise`. The additional package provides a convenient cancelable Promise interface.
+
 ## API reference
 
 ### `animate(config)`
